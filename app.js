@@ -1,120 +1,163 @@
-// ============================================
-// LESSON 10 — CLASSWORK EXERCISE: To-Do List (the Week 5 deliverable)
-// index.html and styles.css are GIVEN. You write this file.
-// All three go at the ROOT of iyf-s12-week-05-{username}.
-//
-// THE RULE: the array is the truth, the page is a picture of it.
-//   Every action = (1) change `todos`  (2) call render()
-//   Never change the page directly in one place and the array in another.
-//
-// textContent for task text · ONE click listener on the list · const/let only
-// ============================================
-
-// ---------- DOM elements (given) ----------
+// DOM Elements
 const form = document.getElementById("todo-form");
 const input = document.getElementById("todo-input");
-const formError = document.getElementById("form-error");
 const todoList = document.getElementById("todo-list");
 const itemsLeft = document.getElementById("items-left");
 const filters = document.querySelectorAll(".filter");
 const clearCompletedBtn = document.getElementById("clear-completed");
 
-// ---------- State (given) ----------
-let todos = [];            // [{ id, text, completed }]
-let currentFilter = "all"; // "all" | "active" | "completed"
-let nextId = 1;
+// State
+let todos = [];
+let currentFilter = "all";
 
-
-// ============================================
-// STEP 1 — render the list from the array
-// ============================================
-
-// TODO 1a: createTodoElement(todo) returns an <li class="todo-item" data-id="…"> containing:
-//   - <input type="checkbox" class="toggle">  (checked if completed)
-//   - <span class="todo-text">  ← text via textContent, NOT innerHTML
-//   - <button type="button" class="delete">✕</button>  with aria-label `Delete "…"`
-//   and the class "completed" on the li when todo.completed is true
+// Functions
 function createTodoElement(todo) {
+    const li = document.createElement("li");
+    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+    li.dataset.id = todo.id;
+
+    const span = document.createElement("span");
+    span.textContent = todo.text;
+
+    // Bonus: Double-click to edit task text
+    span.addEventListener("dblclick", () => {
+        const editInput = document.createElement("input");
+        editInput.type = "text";
+        editInput.value = todo.text;
+        editInput.className = "edit-input";
+        editInput.style.flex = "1";
+        editInput.style.padding = "4px 8px";
+
+        li.replaceChild(editInput, span);
+        editInput.focus();
+
+        function saveEdit() {
+            const newText = editInput.value.trim();
+            if (newText) {
+                todo.text = newText;
+            }
+            renderTodos();
+        }
+
+        editInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                saveEdit();
+            } else if (e.key === "Escape") {
+                renderTodos();
+            }
+        });
+
+        editInput.addEventListener("blur", saveEdit);
+    });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "delete-btn";
+    deleteBtn.textContent = "×";
+    deleteBtn.title = "Delete task";
+
+    li.appendChild(span);
+    li.appendChild(deleteBtn);
+
+    return li;
 }
 
-// TODO 1b: visibleTodos() returns todos filtered by currentFilter
-function visibleTodos() {
+function renderTodos() {
+    todoList.innerHTML = "";
+
+    // Filter todos based on currentFilter
+    const filteredTodos = todos.filter(todo => {
+        if (currentFilter === "active") return !todo.completed;
+        if (currentFilter === "completed") return todo.completed;
+        return true; // "all"
+    });
+
+    filteredTodos.forEach(todo => {
+        const todoElement = createTodoElement(todo);
+        todoList.appendChild(todoElement);
+    });
+
+    updateStats();
 }
 
-// TODO 1c: render() — replace the list's children with the visible todos, then updateStats()
-//   hint: todoList.replaceChildren(...visibleTodos().map(createTodoElement))
-function render() {
-}
-
-// TODO 1d: updateStats() — "1 item left" / "3 items left" (watch the plural)
-function updateStats() {
-}
-
-
-// ============================================
-// STEP 2 — add a task
-// ============================================
-
-// TODO 2a: addTodo(text) — push { id: nextId++, text, completed: false }, then render()
 function addTodo(text) {
+    if (!text.trim()) return;
+
+    const newTodo = {
+        id: Date.now().toString(),
+        text: text.trim(),
+        completed: false
+    };
+
+    todos.push(newTodo);
+    renderTodos();
 }
 
-// TODO 2b: listen for SUBMIT on the form (so Enter works too)
-//   - event.preventDefault()   (why? try it without)
-//   - trim the value; if empty, show "Type a task first." in formError and stop
-//   - otherwise clear the error, addTodo, empty the input, focus it
-// form.addEventListener("submit", (event) => { });
-
-// ✅ Commit:  git commit -m "Add: add tasks to the list"
-
-
-// ============================================
-// STEP 3 — toggle and delete with ONE delegated listener
-// ============================================
-
-// TODO 3a: toggleTodo(id) and deleteTodo(id) — change the array, then render()
 function toggleTodo(id) {
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.completed = !todo.completed;
+        renderTodos();
+    }
 }
+
 function deleteTodo(id) {
+    todos = todos.filter(t => t.id !== id);
+    renderTodos();
 }
 
-// TODO 3b: ONE click listener on todoList:
-//   - const item = event.target.closest(".todo-item");  if (!item) return;
-//   - const id = Number(item.dataset.id);               ← dataset gives strings!
-//   - if the click was inside .delete → deleteTodo(id) and return   (check delete FIRST)
-//   - otherwise → toggleTodo(id)
-// todoList.addEventListener("click", (event) => { });
-//
-// TEST: add a task AFTER the page loaded and click it. Does it toggle? That's delegation.
+function updateStats() {
+    const activeCount = todos.filter(t => !t.completed).length;
+    itemsLeft.textContent = `${activeCount} item${activeCount === 1 ? "" : "s"} left`;
+}
 
-// ✅ Commit:  git commit -m "Add: toggle and delete with event delegation"
+function filterTodos(filter) {
+    currentFilter = filter;
+    
+    // Update active class on filter buttons
+    filters.forEach(btn => {
+        if (btn.dataset.filter === filter) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
 
+    renderTodos();
+}
 
-// ============================================
-// STEP 4 — filters, stats, clear completed
-// ============================================
+// Event Listeners
+form.addEventListener("submit", function(event) {
+    event.preventDefault();
+    addTodo(input.value);
+    input.value = "";
+});
 
-// TODO 4a: filterTodos(filter) — set currentFilter; give the matching .filter button the
-//          class "active" and aria-pressed="true" (others: remove / "false"); render()
-// TODO 4b: a click listener on each filter button → filterTodos(btn.dataset.filter)
-// TODO 4c: clearCompleted() — keep only !completed; render(). Wire it to clearCompletedBtn.
+// Event Delegation for clicking on tasks (toggle or delete)
+todoList.addEventListener("click", function(event) {
+    const li = event.target.closest(".todo-item");
+    if (!li) return;
 
-// ✅ Commit:  git commit -m "Add: filters, stats and clear completed"
+    const id = li.dataset.id;
 
+    if (event.target.classList.contains("delete-btn")) {
+        deleteTodo(id);
+    } else {
+        toggleTodo(id);
+    }
+});
 
-// ============================================
-// STEP 5 — BONUS: double-click to edit
-//   dblclick on .todo-text → show an <input class="edit"> with the text
-//   Enter saves (trimmed; empty keeps the old text) · Escape cancels
-//   hint: keep an `editingId` in state and let createTodoElement draw the input
-// ✅ Commit:  git commit -m "Add: edit a task by double-click"
-// ============================================
+// Filter button event listeners
+filters.forEach(btn => {
+    btn.addEventListener("click", () => {
+        filterTodos(btn.dataset.filter);
+    });
+});
 
+// Clear completed tasks
+clearCompletedBtn.addEventListener("click", () => {
+    todos = todos.filter(t => !t.completed);
+    renderTodos();
+});
 
-// ---------- Initialize ----------
-// render();
-
-// ============================================
-// FINALLY: Settings → Pages → main / root. Your to-do list is the live site.
-// Put the URL in your README under "Live Demo". git push.
-// ============================================
+// Initial render
+renderTodos();
