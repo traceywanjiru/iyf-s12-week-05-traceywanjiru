@@ -27,7 +27,6 @@ A fully functional, responsive interactive To-Do List application built as the W
 - **Inline Editing (Bonus):** Double-click any task text to edit it in place, saving with Enter or canceling with Escape.
 - **Daily Challenges Suite:** Interactive mini-projects including a random color heading changer, dynamic element creator, image hide/toggle, content copier with drag-and-drop, and a dark mode toggle with `localStorage` persistence.
 
-## How to Run
 
 ## How to Run
 
