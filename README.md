@@ -51,4 +51,4 @@ A fully functional, responsive interactive To-Do List application built as the W
 
 ## Live Demo (if deployed)
 
-(https://traceywanjiru.github.io/iyf-s12-week-05-traceywanjiru/)
+[View Live Demo](https://traceywanjiru.github.io/iyf-s12-week-05-traceywanjiru/)
